@@ -4,7 +4,7 @@ import Resumable from "resumablejs";
 
 interface IOptions {
   config: Resumable.ConfigurationHash;
-  browse?: React.RefObject<Element>;
+  browse: React.MutableRefObject<Element | undefined>;
   updateConfigDependency?: any[];
 }
 
@@ -16,11 +16,11 @@ export interface ResumableFileWrapper {
   progress: number;
 }
 
-const omit = (keys, obj) => 
+const omit = (obj: object, key: string) => 
   Object.fromEntries(
     Object.entries(obj)
-      .filter(([k]) => !keys.includes(k))
-  )
+      .filter(([k]) => k !==key))
+  
 
 const convertFile = (file: Resumable.ResumableFile): ResumableFileWrapper => ({
   file,
@@ -32,18 +32,14 @@ const convertFile = (file: Resumable.ResumableFile): ResumableFileWrapper => ({
 
 const useResumable = (options: IOptions) => {
   const [files, setFiles] = useState<{ [key: string]: ResumableFileWrapper }>({});
-  const resumable = useRef<Resumable>();
-  const { updateConfigDependency = [] } = options;
+  const resumable = useRef<Resumable>(new Resumable({}))!;
+  const { updateConfigDependency = [], browse } = options;
 
   const removeFile = (file: ResumableFileWrapper) => {
     file.file.cancel();
     resumable.current.removeFile(file.file);
     setFiles((old) => omit(old, file.file.uniqueIdentifier));
   };
-
-  useLayoutEffect(() => {
-    resumable.current = new Resumable({});
-  }, []);
 
   useLayoutEffect(() => {
     resumable.current.opts = options.config;
@@ -90,6 +86,10 @@ const useResumable = (options: IOptions) => {
         return { ...omit(old, file.uniqueIdentifier), [file.uniqueIdentifier]: updatedFile };
       });
     });
+  }, []);
+
+  useEffect(() => {
+    if (browse.current) resumable.current.assignBrowse(browse.current, false);
   }, []);
 
   return { resumable, files, setFiles, removeFile } as const;
