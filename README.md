@@ -114,3 +114,11 @@ const useResumableContext = () => {
 
 export { ResumableProvider, useResumableContext };
 ```
+
+## Roadmap
+
+- Adding unit tests
+- Adding support for multiple resumable instances
+- fixing all typescript bugs
+- adding a more complete example
+- adding a more complete documentation
